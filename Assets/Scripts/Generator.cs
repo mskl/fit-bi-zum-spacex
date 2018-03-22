@@ -22,9 +22,9 @@ public class Generator : MonoBehaviour {
     public float GA_MutationRateInPercent01 = 0.03F;
 
     /* Nastavení */
-    public int brain_numOfInputs = 7;
-    public int brain_numOfHiddenLayers = 7;
-    public int brain_numOfNeuronsInHiddenLayer = 9;
+    public int brain_numOfInputs = 8;
+    public int brain_numOfHiddenLayers = 4;
+    public int brain_numOfNeuronsInHiddenLayer = 12;
     public int brain_numOfOutputs = 2;
 
     [Header("Seed settings")]
@@ -47,19 +47,16 @@ public class Generator : MonoBehaviour {
     void Start () {
         entityList = new List<GameObject>();    // Inicializuj entityList
 	}
-    void FixedUpdate()
-    {
-        if (Input.GetKeyDown(KeyCode.F))
-        {
+
+    void FixedUpdate() {
+        if (Input.GetKeyDown(KeyCode.F)) {
             Enable();
         }
 
-        if (GeneratorEnabled)
-        {
+        if (GeneratorEnabled) {
             tickCounter++;
 
-            if (tickCounter == 500|| Input.GetKeyDown(KeyCode.N))
-            {
+            if (tickCounter == 500|| Input.GetKeyDown(KeyCode.N)) {
                 CreateNextGenerationAndKillPrevious();
                 tickCounter = 0;
                 generation++;
@@ -84,6 +81,15 @@ public class Generator : MonoBehaviour {
 
     public void CreateNextGenerationAndKillPrevious()   // Tady probíhá iterace jednotlivých generací
     {
+        // Get the average fitness
+        double fitsum = 0;
+        foreach (GameObject ent in entityList) {
+            fitsum += ent.GetComponent<Handling>().fitness;
+        }
+
+        Drawing.Instance.values.Add((float)(fitsum / entityList.Count));
+        Debug.Log("Average fitness: " + fitsum / entityList.Count);
+
 
         var newEntityBrainList = Genetic.ChildrenBrainList(Functions.EntitiesToBrainDictionary(entityList), GA_MutationRateInPercent01, globalSeed + seedIterator);
 
@@ -115,7 +121,7 @@ public class Generator : MonoBehaviour {
 
             Brain newBrain = new Brain(brain_numOfInputs, brain_numOfHiddenLayers, brain_numOfNeuronsInHiddenLayer, brain_numOfOutputs, globalSeed + seedIterator); // Inicializuj mozek
 
-            ga.GetComponent<Handling>().Initialise(globalSeed + seedIterator, newBrain);                            // aktivuj entitu
+            ga.GetComponent<Handling>().Activate(globalSeed + seedIterator, newBrain);                            // aktivuj entitu
 
             entityList.Add(ga);                                                                                     // přidej do listu
             seedIterator++;
@@ -129,12 +135,10 @@ public class Generator : MonoBehaviour {
             GameObject ga = Instantiate(entity, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;     // vygeneruj entity na start
             ga.transform.SetParent(transform);                                                                      // nastav parent transform (kvůli přehlednosti)
 
-            ga.GetComponent<Handling>().Initialise(globalSeed + seedIterator, br);                                  // aktivuj entitu
+            ga.GetComponent<Handling>().Activate(globalSeed + seedIterator, br);                                  // aktivuj entitu
 
             entityList.Add(ga);                                                                                     // přidej do listu
             seedIterator++;
-
-            Debug.Log("Generating");
 
         }
     }
