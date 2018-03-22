@@ -23,8 +23,8 @@ public class Generator : MonoBehaviour {
 
     /* Nastavení */
     public int brain_numOfInputs = 8;
-    public int brain_numOfHiddenLayers = 4;
-    public int brain_numOfNeuronsInHiddenLayer = 12;
+    public int brain_numOfHiddenLayers = 6;
+    public int brain_numOfNeuronsInHiddenLayer = 10;
     public int brain_numOfOutputs = 2;
 
     [Header("Seed settings")]
