@@ -4,9 +4,9 @@ using UnityEngine.UI;
 
 public class Drawing : MonoBehaviourSingleton<Drawing>
 {
-    public List<float> values = new List<float>();
-    float y_scale = 1;
-    float padding = 0.5f;
+    private List<float> values = new List<float>();
+    private float max_value = 0;
+    public float padding = 0.5f;
 
     // will be recalculated at start
     Vector2 size = new Vector2(10, 5);
@@ -19,6 +19,11 @@ public class Drawing : MonoBehaviourSingleton<Drawing>
         values.Add(0);
     }
 
+    public void AddValue(float val) {
+        max_value = Mathf.Max(max_value, val);
+        values.Add(val);
+    }
+
     public void OnRenderObject()
     {
         // Draw axis
@@ -27,17 +32,10 @@ public class Drawing : MonoBehaviourSingleton<Drawing>
         drawLine(left_bottom_origin, left_bottom_origin + new Vector2(size.x, 0));
 
         float x_padding = size.x / values.Count;
-
-        float new_y_scale = 10000000f;
-        bool changed = false;
+        float y_scale = size.y / max_value;
 
         // Draw the individual points
         for (int x = 0; x < values.Count - 1; x++) {
-            if((values[x] / y_scale) > size.y) {
-                new_y_scale = Mathf.Min(new_y_scale, size.y / values[x]);
-                changed = true;
-            }
-
             Vector2 start = left_bottom_origin + new Vector2(x * x_padding, values[x] * y_scale);
             Vector2 end = left_bottom_origin + new Vector2((x + 1) * x_padding, values[x + 1] * y_scale);
             drawLine(start, end, Color.magenta);
@@ -45,10 +43,6 @@ public class Drawing : MonoBehaviourSingleton<Drawing>
                      left_bottom_origin + new Vector2((x+1) * x_padding, +0.1f), 
                      Color.blue);
 
-        }
-
-        if (changed) {
-            y_scale = new_y_scale;
         }
 
         postDrawLine();
