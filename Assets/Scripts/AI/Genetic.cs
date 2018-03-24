@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 
 public class Genetic : MonoBehaviour {
 
@@ -18,7 +19,7 @@ public class Genetic : MonoBehaviour {
         int seed = b1.seed + b2.seed + _seed + System.DateTime.Now.GetHashCode();   // Seed pro generátor
 
         System.Random rnd = new System.Random(seed);
-        Random.seed = seed;
+        Random.InitState(seed);
 
         int crossoverPoint = rnd.Next(0, numOfWeights + 2);                 // O 1 delší, protože míst kde useknout je o 1 víc (+1 je na konci) +1 páš je to exclusive
 
@@ -68,6 +69,16 @@ public class Genetic : MonoBehaviour {
             totalFitness += kvp.Key;
         }
 
+        // NOT very effective
+        //SortedList<float, Brain> srt = new SortedList<float, Brain>(_parentBrainDictionary, new DescComparer<float>());
+
+        // Zachovám top 5% z generace
+		//for (int i = 0; i < (_parentBrainDictionary.Count / 30); i++) {
+        //    childrenBrainListToReturn.Add(srt.Values[i]);
+        //}
+
+        //Debug.Log("Max: " + srt.Keys[0] + " Min: " + srt.Keys[srt.Count - 1]);
+
         while (_parentBrainDictionary.Count != childrenBrainListToReturn.Count)   // Dělej dokud není stejně dětí jako rodičů
         {
             List<Brain> dvaMozkyNaSpareni = new List<Brain>();
@@ -88,5 +99,12 @@ public class Genetic : MonoBehaviour {
             childrenBrainListToReturn.Add(CrossoverAndMutation(dvaMozkyNaSpareni[0], dvaMozkyNaSpareni[1], _mutationChanceInPercent01, seed));
         }
         return childrenBrainListToReturn;
+    }
+}
+
+// Used for reverse sorting
+class DescComparer<T> : IComparer<T> {
+    public int Compare(T x, T y) {
+        return Comparer<T>.Default.Compare(y, x);
     }
 }

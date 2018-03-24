@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class Generator : MonoBehaviour {
+public class Generator : MonoBehaviourSingleton<Generator> {
 
     /*
      *  Generátor je generátor pro GA
@@ -36,16 +36,14 @@ public class Generator : MonoBehaviour {
 
     int tickCounter = 0;
     int generation = 0;
+    public int entity_count = 0;
 
     public bool GeneratorEnabled = false;
-
-    private static Generator _instance;
-    public static Generator Instance { get { return _instance; } }
-    void Awake() { _instance = this; }
 
     // Use this for initialization
     void Start () {
         entityList = new List<GameObject>();    // Inicializuj entityList
+        entity_count = GA_NumOfEntitiesInGeneration;
 	}
 
     void FixedUpdate() {
@@ -56,7 +54,9 @@ public class Generator : MonoBehaviour {
         if (GeneratorEnabled) {
             tickCounter++;
 
-            if (tickCounter == 500|| Input.GetKeyDown(KeyCode.N)) {
+            if (tickCounter >= 600 || Input.GetKeyDown(KeyCode.N)) {
+                transform.position = new Vector3(Random.Range(-13, 13), transform.position.y, transform.position.z);
+                entity_count = GA_NumOfEntitiesInGeneration;
                 CreateNextGenerationAndKillPrevious();
                 tickCounter = 0;
                 generation++;

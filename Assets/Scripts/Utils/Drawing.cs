@@ -1,35 +1,54 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class Drawing : MonoBehaviourSingleton<Drawing>
 {
     public List<float> values = new List<float>();
-    float y_scale = 100;
-    float y_size = 10;
-    float x_size = 15;
+    float y_scale = 1;
+    float padding = 0.5f;
 
+    // will be recalculated at start
+    Vector2 size = new Vector2(10, 5);
+    Vector2 left_bottom_origin = Vector2.zero;
 
     private void Start() {
+        size = new Vector2(transform.localScale.x - padding * 2, transform.localScale.y - padding * 2);
+        left_bottom_origin = new Vector2(transform.position.x - size.x / 2, transform.position.y - size.y / 2);
+
         values.Add(0);
     }
 
     public void OnRenderObject()
     {
-        preDrawLine(Color.green);
-
         // Draw axis
-        drawLine(transform.position, transform.position + Vector3.up * y_size);
-        drawLine(transform.position, transform.position + Vector3.right * x_size);
+        preDrawLine(Color.green);
+        drawLine(left_bottom_origin, left_bottom_origin + new Vector2(0, size.y));
+        drawLine(left_bottom_origin, left_bottom_origin + new Vector2(size.x, 0));
 
-        GL.Color(Color.white);
+        float x_padding = size.x / values.Count;
 
-        float x_padding = x_size / values.Count;
+        float new_y_scale = 10000000f;
+        bool changed = false;
 
         // Draw the individual points
         for (int x = 0; x < values.Count - 1; x++) {
-            Vector3 start = transform.position + new Vector3(x * x_padding, values[x] / y_scale);
-            Vector3 end = transform.position + new Vector3((x + 1) * x_padding, values[x + 1] / y_scale);
-            drawLine(start, end);
+            if((values[x] / y_scale) > size.y) {
+                new_y_scale = Mathf.Min(new_y_scale, size.y / values[x]);
+                changed = true;
+            }
+
+            Vector2 start = left_bottom_origin + new Vector2(x * x_padding, values[x] * y_scale);
+            Vector2 end = left_bottom_origin + new Vector2((x + 1) * x_padding, values[x + 1] * y_scale);
+            drawLine(start, end, Color.magenta);
+            drawLine(left_bottom_origin + new Vector2((x+1) * x_padding, -0.1f), 
+                     left_bottom_origin + new Vector2((x+1) * x_padding, +0.1f), 
+                     Color.blue);
+
+        }
+
+        if (changed) {
+            y_scale = new_y_scale;
         }
 
         postDrawLine();
