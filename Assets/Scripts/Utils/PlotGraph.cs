@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine.UI;
 
-public class Drawing : MonoBehaviourSingleton<Drawing>
+public class PlotGraph : MonoBehaviourSingleton<PlotGraph>
 {
-    private List<float> values = new List<float>();
+    private List<float> average_values = new List<float>();
+    private List<float> landed_count = new List<float>();
     private float max_value = 0;
     public float padding = 0.5f;
 
@@ -16,13 +17,19 @@ public class Drawing : MonoBehaviourSingleton<Drawing>
         size = new Vector2(transform.localScale.x - padding * 2, transform.localScale.y - padding * 2);
         left_bottom_origin = new Vector2(transform.position.x - size.x / 2, transform.position.y - size.y / 2);
 
-        values.Add(0);
+        average_values.Add(0);
+        landed_count.Add(0);
     }
 
-    public void AddValue(float val) {
+    public void AddValueAverage(float val) {
         max_value = Mathf.Max(max_value, val);
-        values.Add(val);
+        average_values.Add(val);
     }
+
+    public void AddValueCount(float val) {
+        landed_count.Add(val);
+    }
+
 
     public void OnRenderObject()
     {
@@ -31,18 +38,27 @@ public class Drawing : MonoBehaviourSingleton<Drawing>
         drawLine(left_bottom_origin, left_bottom_origin + new Vector2(0, size.y));
         drawLine(left_bottom_origin, left_bottom_origin + new Vector2(size.x, 0));
 
-        float x_padding = size.x / values.Count;
+        float x_padding = size.x / average_values.Count;
         float y_scale = size.y / max_value;
 
         // Draw the individual points
-        for (int x = 0; x < values.Count - 1; x++) {
-            Vector2 start = left_bottom_origin + new Vector2(x * x_padding, values[x] * y_scale);
-            Vector2 end = left_bottom_origin + new Vector2((x + 1) * x_padding, values[x + 1] * y_scale);
+        for (int x = 0; x < average_values.Count - 1; x++) {
+            Vector2 start = left_bottom_origin + new Vector2(x * x_padding, average_values[x] * y_scale);
+            Vector2 end = left_bottom_origin + new Vector2((x + 1) * x_padding, average_values[x + 1] * y_scale);
             drawLine(start, end, Color.magenta);
             drawLine(left_bottom_origin + new Vector2((x+1) * x_padding, -0.1f), 
                      left_bottom_origin + new Vector2((x+1) * x_padding, +0.1f), 
                      Color.blue);
+        }
 
+        int ga_generation_size = Generator.Instance.GA_NumOfEntitiesInGeneration;
+        for (int x = 0; x < landed_count.Count - 1; x++) {
+            Vector2 start = left_bottom_origin + new Vector2(x * x_padding, landed_count[x] * size.y / ga_generation_size);
+            Vector2 end = left_bottom_origin + new Vector2((x + 1) * x_padding, landed_count[x+1] * size.y / ga_generation_size);
+            drawLine(start, end, Color.yellow);
+            drawLine(left_bottom_origin + new Vector2((x + 1) * x_padding, -0.1f),
+                     left_bottom_origin + new Vector2((x + 1) * x_padding, +0.1f),
+                     Color.yellow);
         }
 
         postDrawLine();

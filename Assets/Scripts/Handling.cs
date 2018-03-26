@@ -14,9 +14,12 @@ public class Handling : MonoBehaviour {
     public bool ALIVE = false;      // If the object is alive, compute fitness
     private bool SIMULATED = false;  // If it is simulated, the steering is disabled
 
+    public int TTL = 700;
+
     // Starting fitness and fuel
     public float fitness = 0; 
     public float fuel = 1;
+    public bool landed = false;
 
     [Header("Neural network")]
     public Brain entityBrain;               
@@ -50,8 +53,8 @@ public class Handling : MonoBehaviour {
     private void Start() {
         rb = GetComponent<Rigidbody2D>();
 
-        // TODO: Should be removed
         if (target == null) {
+            Debug.LogError("Object " + gameObject.name + " did not have target properly set up.");
             target = GameObject.FindWithTag("LanderTarget").transform;
         }
     }
@@ -72,43 +75,58 @@ public class Handling : MonoBehaviour {
     // Stop the calculation of the fitness
     public void StopLearning() {
         ALIVE = false;
-        // Decrease the entity count
         rb.bodyType = RigidbodyType2D.Static;
     }
 
-    private void Crash(float crash_magnitude) {
+    private void Crash(float crash_distance, float crash_magnitude, float multiplier) {
         GetComponent<SpriteRenderer>().color = new Color(1f, 0.5f, 1f, 0.2f);
-        fitness = fitness / crash_magnitude;
+        float cs = (float)Math.Cos(transform.rotation.z * Mathf.PI / 180f);
+        fitness = fitness / ((crash_magnitude + crash_distance) * multiplier * 3*(cs + 1));
         StopLearning();
     }
 
     private void Land() {
+        landed = true;
         GetComponent<SpriteRenderer>().color = new Color(0f, 1f, 0f, 0.2f);
-        fitness += 1000;
+        fitness += 15000 + fuel * 30000;
         StopLearning();
     }
 
-    void OnCollisionEnter2D(Collision2D collision) {
+    private void OnCollisionEnter2D(Collision2D collision) {
+        // Debug.Log("collision: " + collision.relativeVelocity.magnitude);
+        // Debug.Log("distance: " + VectorToTarget().magnitude);
+        float multiplier = 1f;
         if (collision.gameObject.tag == "TopKillCollider") {
-			// On collision with boundary collider deactivate
-            Crash(collision.relativeVelocity.magnitude / 1);
+            // On collision with boundary collider deactivate
+            multiplier = 3.5f;
         } else if (collision.gameObject.tag == "SideKillCollider") {
             // On collision with boundary collider deactivate
-            Crash(collision.relativeVelocity.magnitude / 5);
+            multiplier = 5f;
         } else if (collision.gameObject.tag == "Sea") {
             // On collision with the sea
-            Crash(collision.relativeVelocity.magnitude / 7);
+            multiplier = 1.5f;
         } else if (collision.relativeVelocity.magnitude > maxHitForce) {
             // Collision with anything
-            Crash(collision.relativeVelocity.magnitude / 10);
+            multiplier = 1.2f;
+        } else {
+            // Did not crash
+            return;
         }
+        Crash(VectorToTarget().magnitude, collision.relativeVelocity.magnitude, multiplier);
     }
 
-    void FixedUpdate () {
+    private void FixedUpdate () {
+        // Check if learning, or manual control
         if (!SIMULATED) {
             PlayerControl();
         } else if (ALIVE == true){
+            TTL--;
             BrainControl();
+        }
+
+        // If expired, stop learning
+        if (TTL <= 0) {
+            StopLearning();
         }
     }
 
@@ -119,12 +137,12 @@ public class Handling : MonoBehaviour {
 
         float[] processedInputsForBrain = new float[entityBrain.numOfInputs];
         processedInputsForBrain[0] = _brain_input_zrotation_velocity();
-        processedInputsForBrain[1] = distance.x;
-        processedInputsForBrain[2] = distance.y;
-        processedInputsForBrain[3] = _brain_input_zrotation();
+		processedInputsForBrain[1] = _brain_input_zrotation();
+        processedInputsForBrain[2] = distance.x;
+        processedInputsForBrain[3] = distance.y;
         processedInputsForBrain[4] = velocity.x;
         processedInputsForBrain[5] = velocity.y;
-        processedInputsForBrain[6] = _brain_input_fuel();        // Fuel
+        //processedInputsForBrain[6] = _brain_input_fuel();        // Fuel
 
         // Výstup z mozku
         float[] outputs = entityBrain.process(processedInputsForBrain);
@@ -137,7 +155,7 @@ public class Handling : MonoBehaviour {
         Steer(vertical, horizontal, sideThursterVector);
 		
 		// Calculate the fitness
-		AddFitness();
+		CalculateFitness();
 
         if (CheckIfLanded()) {
             Land();
@@ -157,10 +175,7 @@ public class Handling : MonoBehaviour {
 		} else {
 			sideThursterVector /= 2;
 		}
-		sideThursterVector = Mathf.Clamp(sideThursterVector, -1, 1);
-                  
-        // TODO: remove unlimited fuel
-		// fuel = 3; 
+        sideThursterVector = Mathf.Clamp(sideThursterVector, -1, 1);
 
         // Do the actual locomotion
 		Steer(vertical, horizontal, sideThursterVector);
@@ -191,8 +206,7 @@ public class Handling : MonoBehaviour {
 
     private Vector2 _brain_input_distance() {
         // Measured from the thurster
-        Vector2 ret = new Vector2(target.transform.position.x - MainThurster.transform.position.x,
-                                  target.transform.position.y - MainThurster.transform.position.y);
+        Vector2 ret = VectorToTarget();
         ret.x = Mathf.Clamp(ret.x / 13, -1, 1);
         ret.y = Mathf.Clamp(ret.y / 13, -1, 1);
         return ret;
@@ -223,17 +237,33 @@ public class Handling : MonoBehaviour {
 
     /******************************************************************************************************************************/
 
-    private void AddFitness() {
-        fitness += 0.1f;
+    private void CalculateFitness() {
+        // Alignment straight
+        float cs = (float)Math.Cos(transform.rotation.z * Mathf.PI / 180f);
 
-        // Postih za špatnou rotaci
-        if (transform.rotation.z < -90 || transform.rotation.z > 90) {
-            fitness = fitness / 10;
-        } else {
+        // Right heading
+        Vector2 ret = VectorToTarget().normalized;
+        Vector2 dir = rb.velocity.normalized;
+
+        float dot_correct_dirrection = Vector2.Dot(ret, dir);// * rb.velocity.magnitude;
+
+        //fitness += Mathf.Clamp(Mathf.Pow(cs + 1, 3), -5, 5);
+        //fitness += Mathf.Clamp(Mathf.Pow(fitness_meter * fuel, 3), -10, 10);
+        fitness += 5 * dot_correct_dirrection;
+
+        // Never go negative
+        fitness = Mathf.Max(0, fitness);
+        // Postih za špatnou rotaci 
+
+		if (transform.rotation.z < -90 || transform.rotation.z > 90) {
+            fitness = fitness / 20;
+        } 
+        else {
             // Bonus for being close to the target
-            fitness += 3 / (0.1f + Mathf.Pow((MainThurster.transform.position.y - target.transform.position.y), 2f));
-            fitness += 5 / (0.1f + Mathf.Pow((MainThurster.transform.position.x - target.transform.position.x), 4f));
+            fitness += 3 / (1 + Mathf.Pow(VectorToTarget().y, 2f));
+            fitness += 5 / (1 + Mathf.Pow(VectorToTarget().x, 2f));
         }
+
     }
 
     // Check if the rocket is landed
@@ -254,6 +284,11 @@ public class Handling : MonoBehaviour {
             }
         }
         return false;
+    }
+
+    private Vector2 VectorToTarget() {
+        return new Vector2(target.transform.position.x - MainThurster.transform.position.x,
+                           target.transform.position.y - MainThurster.transform.position.y);
     }
 
     /******************************************************************************************************************************/

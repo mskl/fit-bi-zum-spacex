@@ -18,11 +18,11 @@ public class Genetic : MonoBehaviour {
 
         // Init the RND generators
         int seed = b1.seed + b2.seed + _seed + System.DateTime.Now.GetHashCode();
-        System.Random rnd = new System.Random(seed);
         Random.InitState(seed);
 
         // O 1 delší, protože míst kde useknout je o 1 víc (+1 je na konci) +1 páš je to exclusive
-        int crossoverPoint = rnd.Next(0, numOfWeights + 2);
+        //rnd.Next(0, numOfWeights + 2);
+        int crossoverPoint = Random.Range(0, numOfWeights + 2);
 
         Brain newBrain = new Brain(b1.numOfInputs, b1.numOfHiddenLayers, b1.numOfNeuronsInHiddenLayers, b1.numOfOutputs, seed);
 
@@ -71,11 +71,12 @@ public class Genetic : MonoBehaviour {
         SortedList<float, Brain> srt = new SortedList<float, Brain>(_parentBrainDictionary, new DescComparer<float>());
 
         // Zachovám top 5% z generace
-		for (int i = 0; i < (_parentBrainDictionary.Count / 30); i++) {
-             childrenBrainListToReturn.Add(srt.Values[i]);
-        }
+		//for (int i = 0; i < (_parentBrainDictionary.Count / 20); i++) {
+        //     childrenBrainListToReturn.Add(srt.Values[i]);
+        //}
 
         // Debug.Log("Max: " + srt.Keys[0] + " Min: " + srt.Keys[srt.Count - 1]);
+        ScreenConsoleController.Instance.Append("Max: " + srt.Keys[0] + " Min: " + srt.Keys[srt.Count - 1]);
 
         while (_parentBrainDictionary.Count != childrenBrainListToReturn.Count)   // Dělej dokud není stejně dětí jako rodičů
         {
@@ -97,12 +98,5 @@ public class Genetic : MonoBehaviour {
             childrenBrainListToReturn.Add(CrossoverAndMutation(dvaMozkyNaSpareni[0], dvaMozkyNaSpareni[1], _mutationChanceInPercent01, seed));
         }
         return childrenBrainListToReturn;
-    }
-}
-
-// Used for reverse sorting
-class DescComparer<T> : IComparer<T> {
-    public int Compare(T x, T y) {
-        return Comparer<T>.Default.Compare(y, x);
     }
 }

@@ -56,7 +56,8 @@ public class Brain {
         numOfOutputs                = _numOfOutputs;
         seed                        = _seed;
 
-        System.Random rnd = new System.Random(_seed);               // Inicializuj random s daným seedem
+        // Inicializuj random s daným seedem
+        System.Random rnd = new System.Random(_seed);
 
         // Počet layerů = numOfHiddenLayers + input + output
         neuronLayers = new Neuron[numOfHiddenLayers + 1 + 1][];     
@@ -133,7 +134,6 @@ public class Brain {
             outputs[i] = Mathf.Clamp(neuronLayers[neuronLayers.Length - 1][i].output(), -1F, 1F);
         }
 
-        // Vrať hodnoty, které jsou uzpůsobené na zatáčení - NEED TO REVISE! Funguje jen pro numOfOutputs = 2!!!
         return outputs;
     }
 }

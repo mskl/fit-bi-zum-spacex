@@ -9,9 +9,8 @@ public class Generator : MonoBehaviourSingleton<Generator> {
      * Postup:
      *  1) vytvoř jednotlivce s random weights
      *  2) nech je žít a vyhodnoť jejich fitness
-     *  3) vyhodnoť jejich fitness
-     *  4) spař je podle fitness
-     *  5) další generace
+     *  3) spáruj je podle fitness
+     *  4) další generace
      * 
      */
 
@@ -22,8 +21,8 @@ public class Generator : MonoBehaviourSingleton<Generator> {
     public int GA_NumOfEntitiesInGeneration;
     public float GA_MutationRateInPercent01 = 0.03F;
 
-    /* Nastavení */
-    private int brain_numOfInputs = 7;
+    [Header("Neural network settings")]
+    private int brain_numOfInputs = 6;
     public int brain_numOfHiddenLayers = 6;
     public int brain_numOfNeuronsInHiddenLayer = 10;
     private int brain_numOfOutputs = 3;
@@ -38,7 +37,7 @@ public class Generator : MonoBehaviourSingleton<Generator> {
     private int tickCounter = 0;
     private int generation = 0;
 
-    public bool GeneratorEnabled = false;
+    public bool generator_enabled = false;
 
     // Use this for initialization
     void Start () {
@@ -48,53 +47,40 @@ public class Generator : MonoBehaviourSingleton<Generator> {
 
     void FixedUpdate() {
         if (Input.GetKeyDown(KeyCode.F)) {
-            Enable();
+            generator_enabled = true;
+			globalSeed = System.DateTime.Now.GetHashCode();
+            CleanScene();
+            FirstGenerate();
         }
 
-        if (GeneratorEnabled) {
+        if (generator_enabled) {
             tickCounter++;
 
-            if (tickCounter >= 600 || Input.GetKeyDown(KeyCode.N)) {
-                //transform.position = new Vector3(Random.Range(-13, 13), transform.position.y, transform.position.z);
-                CreateNextGenerationAndKillPrevious();
+            if (tickCounter >= 700 || Input.GetKeyDown(KeyCode.N)) {
+                SetRandomPosition();
+                NextGeneration();
                 tickCounter = 0;
                 generation++;
-                Debug.Log("Generation: " + generation);
             }
         }
     }
 
-    public void Enable() {
-        destroyAllEntities();
-        GeneratorEnabled = true;
-        globalSeed = System.DateTime.Now.GetHashCode();
-        FirstGenerate();
-    }
-
-    public void Disable() {
-        GeneratorEnabled = false;
-        destroyAllEntities();
-    }
-
     // Tady probíhá iterace jednotlivých generací
-    public void CreateNextGenerationAndKillPrevious() {
+    public void NextGeneration() {
         // Get the average fitness
-        double fitess_sum = 0;
-        foreach (GameObject ent in entityList) {
-            fitess_sum += ent.GetComponent<Handling>().fitness;
-        }
-        float average_fitness = (float)(fitess_sum / entityList.Count);
+        PrintGenerationInfo();
 
-        Drawing.Instance.AddValue(average_fitness);
-        ScreenConsoleController.Instance.Append("generation: " + generation + " average fitness: " + average_fitness);
-        Debug.Log("Average fitness: " + average_fitness);
-
-        var newEntityBrainList = Genetic.ChildrenBrainList(Functions.EntitiesToBrainDictionary(entityList), GA_MutationRateInPercent01, globalSeed + seedIterator);
-        destroyAllEntities();
+        var newEntityBrainList = Genetic.ChildrenBrainList(
+            Functions.EntitiesToBrainDictionary(entityList), 
+            GA_MutationRateInPercent01, 
+            globalSeed + seedIterator);
+        
+        CleanScene();
         GenerateFromBrains(newEntityBrainList);
     }
 
-    public void destroyAllEntities() {
+    // Destroy everything
+    private void CleanScene() {
         foreach (GameObject go in entityList) {
             go.GetComponent<Handling>().StopLearning();
             Destroy(go);
@@ -102,26 +88,25 @@ public class Generator : MonoBehaviourSingleton<Generator> {
         entityList.Clear();
     }
 
-    public void FirstGenerate() {
-        for (int x = 0; x < GA_NumOfEntitiesInGeneration; x++) {
-            GameObject ga = Instantiate(entity, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;   // vygeneruj entity na start
+    // Generate the first generation with random brains
+    private void FirstGenerate() {
+        List<Brain> newBrains = new List<Brain>();
+        for (int x = 0; x < GA_NumOfEntitiesInGeneration; x++) {                                                         
+            Brain newBrain = new Brain(brain_numOfInputs, 
+                                       brain_numOfHiddenLayers, 
+                                       brain_numOfNeuronsInHiddenLayer, 
+                                       brain_numOfOutputs, 
+                                       globalSeed + seedIterator);      
 
-            // nastav parent transform (kvůli přehlednosti)
-            ga.transform.SetParent(transform);                                                                  
-
-            Brain newBrain = new Brain(brain_numOfInputs, brain_numOfHiddenLayers, brain_numOfNeuronsInHiddenLayer, brain_numOfOutputs, globalSeed + seedIterator); // Inicializuj mozek
-
-            // Setup the entity
-            ga.GetComponent<Handling>().SetTarget(target);
-            ga.GetComponent<Handling>().StartLearning(globalSeed + seedIterator, newBrain);                     
-
-            // Save the entity to the list
-            entityList.Add(ga);                                                                                 
+            newBrains.Add(newBrain);                                                                            
             seedIterator++;
         }
+
+        GenerateFromBrains(newBrains);
     }
 
-    public void GenerateFromBrains(List<Brain> _newBrains) {
+    // Generate entities with brains from the parameter
+    private void GenerateFromBrains(List<Brain> _newBrains) {
         foreach (Brain br in _newBrains) {
             // Vygeneruj entitu na start
             GameObject ga = Instantiate(entity, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;  
@@ -138,5 +123,26 @@ public class Generator : MonoBehaviourSingleton<Generator> {
             seedIterator++;
         }
     }
+
+    // Get the average fitness of the objects currently in the entityList
+    private float GetAverageFitness() {
+        double fitess_sum = 0;
+        foreach (GameObject ent in entityList) {
+            fitess_sum += ent.GetComponent<Handling>().fitness;
+        }
+        return (float)(fitess_sum / entityList.Count);
+    }
 	
+    // Print debug console and 
+    private void PrintGenerationInfo() {
+        float average_fitness = GetAverageFitness();
+        PlotGraph.Instance.AddValueAverage(average_fitness);
+        ScreenConsoleController.Instance.Append("generation: " + generation + " average fitness: " + average_fitness);
+        Debug.Log("generation: " + generation + " average fitness: " + average_fitness);
+    }
+
+    // Set random position of the spawner
+    private void SetRandomPosition() {
+        transform.position = new Vector3(Random.Range(-13, 13), transform.position.y, transform.position.z);
+    }
 }
