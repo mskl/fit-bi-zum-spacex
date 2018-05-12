@@ -257,8 +257,11 @@ public class Handling : MonoBehaviour {
 
         // Never go negative
         fitness = Mathf.Max(0, fitness);
-        // Postih za špatnou rotaci 
 
+        // Passive bonus
+        fitness += 1;
+
+        // Postih za špatnou rotaci 
 		if (transform.rotation.z < -90 || transform.rotation.z > 90) {
             fitness = fitness / 40;
         } 
@@ -307,7 +310,7 @@ public class Handling : MonoBehaviour {
             Debug.DrawLine(SideThurster.transform.position, SideThurster.transform.position + transform.right * -sideThursterVector, Color.red);
 
             // Draw the remaining fuel
-            Debug.DrawLine(transform.position + new Vector3(0 - 0.5f, 2.1f), transform.position + new Vector3(fuel - 0.5f, 2.1f), Color.green);
+            // Debug.DrawLine(transform.position + new Vector3(0 - 0.5f, 2.1f), transform.position + new Vector3(fuel - 0.5f, 2.1f), Color.green);
 
             // Draw the z rotation
             Debug.DrawLine(transform.position + new Vector3(0, 2f), transform.position + new Vector3(_brain_input_zrotation(), 2f), Color.magenta);
