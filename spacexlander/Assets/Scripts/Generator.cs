@@ -45,6 +45,7 @@ public class Generator : MonoBehaviourSingleton<Generator> {
         Application.runInBackground = true;     // App will run in background
     }
 
+    // On fixed update (physics)
     void FixedUpdate() {
         if (Input.GetKeyDown(KeyCode.F)) {
             generator_enabled = true;
@@ -57,7 +58,6 @@ public class Generator : MonoBehaviourSingleton<Generator> {
             tickCounter++;
 
             if (tickCounter >= 700 || Input.GetKeyDown(KeyCode.N)) {
-                SetRandomPosition();
                 NextGeneration();
                 tickCounter = 0;
                 generation++;
@@ -70,10 +70,8 @@ public class Generator : MonoBehaviourSingleton<Generator> {
         // Get the average fitness
         PrintGenerationInfo();
 
-        var newEntityBrainList = Genetic.ChildrenBrainList(
-            Functions.EntitiesToBrainDictionary(entityList), 
-            GA_MutationRateInPercent01, 
-            globalSeed + seedIterator);
+        var newEntityBrainList = Genetic.ChildrenBrainList( Functions.EntitiesToBrainDictionary(entityList), 
+            GA_MutationRateInPercent01, globalSeed + seedIterator);
         
         CleanScene();
         GenerateFromBrains(newEntityBrainList);
@@ -108,8 +106,12 @@ public class Generator : MonoBehaviourSingleton<Generator> {
     // Generate entities with brains from the parameter
     private void GenerateFromBrains(List<Brain> _newBrains) {
         foreach (Brain br in _newBrains) {
+
+            // Random pos of every rocket
+            Vector3 randPos = GetRandomPosition(transform.position);
+
             // Vygeneruj entitu na start
-            GameObject ga = Instantiate(entity, transform.position, Quaternion.Euler(0, 0, 0)) as GameObject;  
+            GameObject ga = Instantiate(entity, randPos, Quaternion.Euler(0, 0, 0)) as GameObject;  
 
             // Nastav parent transform (kvůli přehlednosti)
             ga.transform.SetParent(transform);
@@ -133,16 +135,22 @@ public class Generator : MonoBehaviourSingleton<Generator> {
         return (float)(fitess_sum / entityList.Count);
     }
 	
-    // Print debug console and 
+    // Print debug console and draw graph
     private void PrintGenerationInfo() {
         float average_fitness = GetAverageFitness();
+
+        // Plot the onscreen graph
         PlotGraph.Instance.AddValueAverage(average_fitness);
+
+        // Print the information on the screen
         ScreenConsoleController.Instance.Append("generation: " + generation + " average fitness: " + average_fitness);
+
+        // Print the information to the console
         Debug.Log("generation: " + generation + " average fitness: " + average_fitness);
     }
 
-    // Set random position of the spawner
-    private void SetRandomPosition() {
-        transform.position = new Vector3(Random.Range(-13, 13), transform.position.y, transform.position.z);
+    // Get a random position based on the spawner
+    private static Vector3 GetRandomPosition(Vector3 spawnerPosition) {
+        return new Vector3(Random.Range(-13, 13), spawnerPosition.y, spawnerPosition.z);
     }
 }

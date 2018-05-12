@@ -14,6 +14,7 @@ public class Handling : MonoBehaviour {
     public bool ALIVE = false;      // If the object is alive, compute fitness
     private bool SIMULATED = false;  // If it is simulated, the steering is disabled
 
+    // Time to live of the rocket
     public int TTL = 700;
 
     // Starting fitness and fuel
@@ -78,6 +79,7 @@ public class Handling : MonoBehaviour {
         rb.bodyType = RigidbodyType2D.Static;
     }
 
+    // Is called on crash
     private void Crash(float crash_distance, float crash_magnitude, float multiplier) {
         GetComponent<SpriteRenderer>().color = new Color(1f, 0.5f, 1f, 0.2f);
         float cs = (float)Math.Cos(transform.rotation.z * Mathf.PI / 180f);
@@ -85,6 +87,7 @@ public class Handling : MonoBehaviour {
         StopLearning();
     }
 
+    // Is called on landing
     private void Land() {
         landed = true;
         GetComponent<SpriteRenderer>().color = new Color(0f, 1f, 0f, 0.2f);
@@ -92,9 +95,8 @@ public class Handling : MonoBehaviour {
         StopLearning();
     }
 
+    // On collision, process
     private void OnCollisionEnter2D(Collision2D collision) {
-        // Debug.Log("collision: " + collision.relativeVelocity.magnitude);
-        // Debug.Log("distance: " + VectorToTarget().magnitude);
         float multiplier = 1f;
         if (collision.gameObject.tag == "TopKillCollider") {
             // On collision with boundary collider deactivate
@@ -112,6 +114,7 @@ public class Handling : MonoBehaviour {
             // Did not crash
             return;
         }
+
         Crash(VectorToTarget().magnitude, collision.relativeVelocity.magnitude, multiplier);
     }
 
@@ -130,19 +133,20 @@ public class Handling : MonoBehaviour {
         }
     }
 
+    // Feed the data into the brain
     private void BrainControl() {
         // The inputs for the brain
         Vector2 distance = _brain_input_distance();
         Vector2 velocity = _brain_input_velocity();
 
         float[] processedInputsForBrain = new float[entityBrain.numOfInputs];
+
         processedInputsForBrain[0] = _brain_input_zrotation_velocity();
 		processedInputsForBrain[1] = _brain_input_zrotation();
         processedInputsForBrain[2] = distance.x;
         processedInputsForBrain[3] = distance.y;
         processedInputsForBrain[4] = velocity.x;
         processedInputsForBrain[5] = velocity.y;
-        //processedInputsForBrain[6] = _brain_input_fuel();        // Fuel
 
         // Výstup z mozku
         float[] outputs = entityBrain.process(processedInputsForBrain);
@@ -157,11 +161,13 @@ public class Handling : MonoBehaviour {
 		// Calculate the fitness
 		CalculateFitness();
 
+        // If landed, award the landing bonus
         if (CheckIfLanded()) {
             Land();
         }
     }
 
+    // Is used in manual mode
     private void PlayerControl() {
         // Get the arrow key inputs
 		float vertical = Input.GetAxis("Vertical");
@@ -182,7 +188,7 @@ public class Handling : MonoBehaviour {
     }
 
     // Move the actual ship
-    private void Steer (float _vertical, float _horizontal, float _side_vector) {
+    private void Steer(float _vertical, float _horizontal, float _side_vector) {
         // If it has any fuel..
         if (fuel > 0) {
             // Direction down
@@ -237,6 +243,7 @@ public class Handling : MonoBehaviour {
 
     /******************************************************************************************************************************/
 
+    // Calculate the fitness function
     private void CalculateFitness() {
         // Alignment straight
         float cs = (float)Math.Cos(transform.rotation.z * Mathf.PI / 180f);
@@ -245,10 +252,7 @@ public class Handling : MonoBehaviour {
         Vector2 ret = VectorToTarget().normalized;
         Vector2 dir = rb.velocity.normalized;
 
-        float dot_correct_dirrection = Vector2.Dot(ret, dir);// * rb.velocity.magnitude;
-
-        //fitness += Mathf.Clamp(Mathf.Pow(cs + 1, 3), -5, 5);
-        //fitness += Mathf.Clamp(Mathf.Pow(fitness_meter * fuel, 3), -10, 10);
+        float dot_correct_dirrection = Vector2.Dot(ret, dir); // * rb.velocity.magnitude;
         fitness += 5 * dot_correct_dirrection;
 
         // Never go negative
@@ -256,7 +260,7 @@ public class Handling : MonoBehaviour {
         // Postih za špatnou rotaci 
 
 		if (transform.rotation.z < -90 || transform.rotation.z > 90) {
-            fitness = fitness / 20;
+            fitness = fitness / 40;
         } 
         else {
             // Bonus for being close to the target
