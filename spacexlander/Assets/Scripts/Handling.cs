@@ -91,7 +91,7 @@ public class Handling : MonoBehaviour {
     private void Land() {
         landed = true;
         GetComponent<SpriteRenderer>().color = new Color(0f, 1f, 0f, 0.2f);
-        fitness += 15000 + fuel * 30000;
+        fitness += 15000 + fuel * 40000;
         StopLearning();
     }
 
@@ -122,7 +122,8 @@ public class Handling : MonoBehaviour {
         // Check if learning, or manual control
         if (!SIMULATED) {
             PlayerControl();
-        } else if (ALIVE == true){
+        } 
+        else if (ALIVE == true){
             TTL--;
             BrainControl();
         }
@@ -253,13 +254,13 @@ public class Handling : MonoBehaviour {
         Vector2 dir = rb.velocity.normalized;
 
         float dot_correct_dirrection = Vector2.Dot(ret, dir); // * rb.velocity.magnitude;
-        fitness += 5 * dot_correct_dirrection;
+        fitness += 7 * dot_correct_dirrection;
 
         // Never go negative
         fitness = Mathf.Max(0, fitness);
 
         // Passive bonus
-        fitness += 1;
+        fitness += 0.7f;
 
         // Postih za špatnou rotaci 
 		if (transform.rotation.z < -90 || transform.rotation.z > 90) {

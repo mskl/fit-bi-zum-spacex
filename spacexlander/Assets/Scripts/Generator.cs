@@ -91,7 +91,7 @@ public class Generator : MonoBehaviourSingleton<Generator> {
         List<Brain> newBrains = new List<Brain>();
         for (int x = 0; x < GA_NumOfEntitiesInGeneration; x++) {                                                         
             Brain newBrain = new Brain(brain_numOfInputs, 
-                                       brain_numOfHiddenLayers, 
+                                       brain_numOfHiddeanLayers, 
                                        brain_numOfNeuronsInHiddenLayer, 
                                        brain_numOfOutputs, 
                                        globalSeed + seedIterator);      
