@@ -1,12 +1,13 @@
 ﻿<Properties StartupConfiguration="{D8F334B0-1EEF-5F83-4436-BBBBFB4DF6E9}|">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/Handling.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/Generator.cs">
     <Files>
-      <File FileName="Assets/Scripts/Generator.cs" Line="94" Column="57" />
+      <File FileName="Assets/Scripts/Generator.cs" Line="75" Column="9" />
       <File FileName="Assets/Scripts/Handling.cs" Line="94" Column="41" />
       <File FileName="Assets/Scripts/AI/Neuron.cs" Line="27" Column="9" />
       <File FileName="Assets/Scripts/AI/Brain.cs" Line="116" Column="19" />
       <File FileName="Assets/Scripts/AI/Genetic.cs" Line="43" Column="21" />
       <File FileName="Assets/Scripts/AI/Functions.cs" Line="25" Column="9" />
+      <File FileName="Assets/Scripts/UI/GameplayController.cs" Line="29" Column="6" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

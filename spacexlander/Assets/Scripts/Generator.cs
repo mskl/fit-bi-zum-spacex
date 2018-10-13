@@ -45,15 +45,16 @@ public class Generator : MonoBehaviourSingleton<Generator> {
         Application.runInBackground = true;     // App will run in background
     }
 
+    // First generation
+    public void FirstGen() {
+        generator_enabled = true;
+        globalSeed = System.DateTime.Now.GetHashCode();
+        CleanScene();
+        FirstGenerate();
+    }
+
     // On fixed update (physics)
     void FixedUpdate() {
-        if (Input.GetKeyDown(KeyCode.F)) {
-            generator_enabled = true;
-			globalSeed = System.DateTime.Now.GetHashCode();
-            CleanScene();
-            FirstGenerate();
-        }
-
         if (generator_enabled) {
             tickCounter++;
 
@@ -91,7 +92,7 @@ public class Generator : MonoBehaviourSingleton<Generator> {
         List<Brain> newBrains = new List<Brain>();
         for (int x = 0; x < GA_NumOfEntitiesInGeneration; x++) {                                                         
             Brain newBrain = new Brain(brain_numOfInputs, 
-                                       brain_numOfHiddeanLayers, 
+                                       brain_numOfHiddenLayers, 
                                        brain_numOfNeuronsInHiddenLayer, 
                                        brain_numOfOutputs, 
                                        globalSeed + seedIterator);      
