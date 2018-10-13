@@ -1,7 +1,7 @@
 ﻿<Properties StartupConfiguration="{D8F334B0-1EEF-5F83-4436-BBBBFB4DF6E9}|">
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/Generator.cs">
     <Files>
-      <File FileName="Assets/Scripts/Generator.cs" Line="75" Column="9" />
+      <File FileName="Assets/Scripts/Generator.cs" Line="72" Column="31" />
       <File FileName="Assets/Scripts/Handling.cs" Line="94" Column="41" />
       <File FileName="Assets/Scripts/AI/Neuron.cs" Line="27" Column="9" />
       <File FileName="Assets/Scripts/AI/Brain.cs" Line="116" Column="19" />

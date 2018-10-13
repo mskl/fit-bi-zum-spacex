@@ -1,6 +1,6 @@
-OSXStandalone
+WebGL
 PlayerPath?
-/Users/matya/Desktop/SpaceXLander.app
+/Users/matya/Desktop/SpaceXLander/SpaceXLander
 SceneListBegin?
 Assets/_MainScene.unity
 SceneListEnd?
@@ -16,6 +16,7 @@ ff05dcdf90651c3d98a9cad3df5e471e UnityEngine.Timeline.dll:UnityEngine.Timeline.C
 31aaf521b3ef8699466676591ea0efd4 UnityEngine.Timeline.dll:UnityEngine.Timeline.GroupTrack
 31aaf521b3ef8699466676591ea0efd4 UnityEngine.Timeline.dll:UnityEngine.Timeline.PlayableTrack
 df374c01140c2d578bf70cbd60073d1d UnityEngine.Timeline.dll:UnityEngine.Timeline.TimelineAsset
+62b570bb8c7c0947e598fb10c5d3f3e3 Assembly-CSharp.dll:.GameplayController
 a35dc9cca2faebc5f5f1aeb9e8e47bbe UnityEngine.UI.dll:UnityEngine.UI.AspectRatioFitter
 05524b8f659e7bfe5756d1335fec24ba UnityEngine.UI.dll:UnityEngine.EventSystems.BaseInput
 49cd62a578efc0a599b810a2b66cd49c UnityEngine.UI.dll:UnityEngine.UI.Button
@@ -153,4 +154,3 @@ c2275a8bfbb9f9942cad75ecdfded41d UnityEngine.HoloLens.dll:UnityEngine.XR.WSA.Spa
 136e6390bcdf4b9d1700c7fc9153a9ae Assembly-CSharp.dll:.PlotGraph
 03d35195b0b8e574df6e3654fbdc4479 Assembly-CSharp.dll:.ScreenConsoleController
 05524b8f659e7bfe5756d1335fec24ba Assembly-CSharp.dll:.Functions
-62b570bb8c7c0947e598fb10c5d3f3e3 Assembly-CSharp.dll:.GameplayController
